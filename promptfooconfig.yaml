@@ -1,0 +1,168 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+
+# Learn more about building a configuration: https://promptfoo.dev/docs/configuration/guide
+
+description: "Evaluation Configuration for WatsonxAI Customer Support Models"
+
+ 
+
+prompts:
+  - id: |
+      <|system|>
+      You are Granite Chat, an AI language model developed by IBM. You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior. You are a professional customer support agent. Provide a helpful and courteous response to the customer's inquiry in {{language}}. Ensure the response is clear, concise, and addresses all aspects of the inquiry. Respond strictly in valid JSON format with the key "response". Do not include any additional text, explanations, or formatting. 
+
+      Response format:
+      {
+        "response": "Your support message here."
+      }
+      Please do not say anything else and do not start a conversation.
+      <|user|>
+      {{inquiry}}
+      <|assistant|>
+
+    label: standard_customer_support_prompt_granite
+  - id: |
+      <|system|>
+      You are Granite Chat, an AI language model developed by IBM. You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior. You are a technical customer support specialist. Provide a detailed and accurate response to the customer's technical issue in {{language}}. Ensure the response includes troubleshooting steps, possible solutions, and any necessary technical explanations. Respond strictly in valid JSON format with the key "response". Do not include any additional text, explanations, or formatting. 
+
+      Response format:
+      {
+        "response": "Your technical support message here."
+      }
+      Please do not say anything else and do not start a conversation.
+      <|user|>
+      {{inquiry}}
+      <|assistant|>
+
+    label: standard_customer_support_prompt_granite
+  - id: |
+      <|begin_of_text|><|start_header_id|>system<|end_header_id|>
+
+      You are a professional customer support agent.
+      Provide a helpful and courteous response to the customer's inquiry in {{language}}.
+
+      Customer Inquiry:
+      {{inquiry}}
+
+      Ensure the response is clear, concise, and addresses all aspects of the inquiry.
+      Respond strictly in valid JSON format with the key "response".
+      Do not include any additional text, explanations, or formatting.
+
+      Response format:
+      {
+        "response": "Your support message here."
+      }
+      Do not use Markdown. Do not include any surrounding text. Only respond with the JSON object.
+
+      <|eot_id|><|start_header_id|>user<|end_header_id|>
+
+      {{inquiry}}
+
+      <|eot_id|><|start_header_id|>assistant<|end_header_id|>
+
+      <|eot_id|>
+    label: standard_customer_support_prompt_llama
+
+  - id: |
+      <|begin_of_text|><|start_header_id|>system<|end_header_id|>
+
+      You are a technical customer support specialist.
+      Provide a detailed and accurate response to the customer's technical issue in {{language}}.
+
+      Customer Issue:
+      "{{inquiry}}"
+
+      Ensure the response includes troubleshooting steps, possible solutions, and any necessary technical explanations.
+      Respond strictly in valid JSON format with the key "response".
+      Do not include any additional text, explanations, or formatting.
+
+      Response format:
+      {
+        "response": "Your technical support message here."
+      }
+      Do not use Markdown. Do not include any surrounding text. Only respond with the JSON object.
+
+      <|eot_id|><|start_header_id|>user<|end_header_id|>
+
+      {{inquiry}}
+
+      <|eot_id|><|start_header_id|>assistant<|end_header_id|>
+
+      <|eot_id|>
+    label: technical_customer_support_prompt_llama
+
+
+providers:
+  - id: watsonx:ibm/granite-20b-multilingual
+    prompts:
+      - standard_customer_support_prompt_granite
+      - technical_customer_support_prompt_granite
+  - id: watsonx:meta-llama/llama-3-2-1b-instruct
+    prompts:
+      - standard_customer_support_prompt_llama
+      - technical_customer_support_prompt_llama
+
+tests:
+  - description: "Standard Support - English"
+    vars:
+      language: "English"
+      inquiry: "I am having trouble logging into my account. Can you help me reset my password?"
+    assert:
+      - type: llm-rubric
+        value: "Response provides clear and accurate steps in English to help the user reset their password."
+
+  - description: "Standard Support - Spanish"
+    vars:
+      language: "Spanish"
+      inquiry: "Tengo problemas para iniciar sesión en mi cuenta. ¿Puedes ayudarme a restablecer mi contraseña?"
+    assert:
+      - type: llm-rubric
+        value: "Response provides clear and accurate steps in Spanish to help the user reset their password."
+
+  - description: "Technical Support - French"
+    vars:
+      language: "French"
+      inquiry: "Mon ordinateur ne démarre plus après la dernière mise à jour. Que puis-je faire?"
+    assert:
+      - type: llm-rubric
+        value: "Response provides accurate troubleshooting steps in French to resolve the issue where the computer does not start after an update."
+
+  - description: "Technical Support - German"
+    vars:
+      language: "German"
+      inquiry: "Nach dem letzten Update startet mein Laptop nicht mehr. Was kann ich tun?"
+    assert:
+      - type: llm-rubric
+        value: "Response provides accurate troubleshooting steps in German to resolve the issue where the laptop does not start after an update."
+
+  - description: "Technical Support - New York City"
+    vars:
+      language: "English"
+      inquiry: "I'm experiencing connectivity issues with my VPN while in New York City. How can I resolve this?"
+    assert:
+      - type: llm-rubric
+        value: "Response provides accurate and actionable steps in English to troubleshoot connectivity issues with the VPN in New York City."
+
+  - description: "Standard Support - Billing Inquiry in English"
+    vars:
+      language: "English"
+      inquiry: "Can you help me understand why I was charged twice on my last bill?"
+    assert:
+      - type: llm-rubric
+        value: "Response provides a polite explanation of possible reasons for duplicate charges and advises on how to resolve the issue."
+
+  - description: "Standard Support - Spanish Billing Inquiry"
+    vars:
+      language: "Spanish"
+      inquiry: "¿Por qué se me cobró dos veces en mi última factura?"
+    assert:
+      - type: llm-rubric
+        value: "Response provides a polite explanation in Spanish of possible reasons for duplicate charges and advises on how to resolve the issue."
+
+  - description: "Standard Support - Refund Request in English"
+    vars:
+      language: "English"
+      inquiry: "I would like to request a refund for my recent purchase. Can you help?"
+    assert:
+      - type: llm-rubric
+        value: "Response explains the refund process clearly and politely, ensuring the customer knows the next steps to initiate a refund."
